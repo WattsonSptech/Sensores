@@ -2,12 +2,12 @@ from ISimuladorSensor import ISimuladorSensor
 from Registro import Registro
 import numpy as np
 
-class Tensao(ISimuladorSensor):
+class Frequencia(ISimuladorSensor):
     
     __VALOR_BASE__ = 60
 
     def __init__(self) -> None:
-        self.nome_sensor = "TensorGet"
+        self.nome_sensor = "FrequencyGet"
         self.unidade = "Hz"
 
     def __formula_sensor__(self):
@@ -19,8 +19,8 @@ class Tensao(ISimuladorSensor):
         if np.random.pareto(2) < 1:
             pico = -pico
 
-        tensao = self.__VALOR_BASE__ + variacao_moment + pico
+        frequencia = self.__VALOR_BASE__ + variacao_moment + pico
 
-        return Registro(self.nome_sensor, self.unidade, tensao)
+        return Registro(self.nome_sensor, self.unidade, frequencia)
 
-Tensao().gerar_dados(5)
+Frequencia().gerar_dados(5)
