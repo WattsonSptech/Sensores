@@ -7,7 +7,7 @@ class Tensao(ISimuladorSensor):
     __VALOR_BASE__ = 60
 
     def __init__(self) -> None:
-        self.nome_sensor = "TensorGet"
+        self.nome_sensor = "E9304A E - Series"
         self.unidade = "Hz"
 
     def __formula_sensor__(self):
