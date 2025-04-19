@@ -26,4 +26,4 @@ class Temperatura(ISimuladorSensor):
             registro = self.__formula_sensor__()
             print(registro)
 
-Temperatura().gerar_dados(100)
+Temperatura().gerar_dados(10)
