@@ -10,3 +10,10 @@ class Registro:
 
     def __repr__(self) -> str:
         return f"{self.sensor}: {self.valor} {self.unidade}"
+
+    def to_json(self) -> dict:
+        return {
+            "sensor": self.sensor,
+            "unidade": self.unidade,
+            "valor": self.valor
+        }

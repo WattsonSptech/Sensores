@@ -1,1 +1,2 @@
 numpy~=2.2.5
+azure-iot-device==2.14.0

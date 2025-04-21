@@ -11,8 +11,7 @@ class ISimuladorSensor:
         for i in range(vezes):
             valor = self.__formula_sensor__()
             r = Registro(self.nome_sensor, self.unidade, valor)
-
-            registros.append(r)
+            registros.append(r.to_json())
 
         return registros
 

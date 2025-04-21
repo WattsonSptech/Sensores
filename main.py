@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 
 import dotenv
@@ -31,7 +32,7 @@ async def enviar_para_azure(dados: list[Registro]):
 
     print("Enviando dados...")
     try:
-        await device_client.send_message(dados)
+        await device_client.send_message(json.dumps(dados))
         print("Sucesso")
     except Exception as e:
         print("Falha:")
