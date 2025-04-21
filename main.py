@@ -1,6 +1,8 @@
 import asyncio
 import os
 
+import dotenv
+
 from interfaces.Registro import Registro
 from sensores.Corrente import Corrente
 from sensores.Frequencia import Frequencia
@@ -20,7 +22,7 @@ def obter_dados(quantidade):
 
 async def enviar_para_azure(dados: list[Registro]):
     conn_str = os.getenv("AZURE_CREDENTIALS")
-    if conn_str is None:
+    if conn_str is None or conn_str == "":
         raise ValueError("Variável de ambiente \"AZURE_CREDENTIALS\" indefinida ou inválida.")
 
     device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
@@ -38,5 +40,6 @@ async def enviar_para_azure(dados: list[Registro]):
         await device_client.shutdown()
 
 if __name__ == "__main__":
+    dotenv.load_dotenv()
     dados = obter_dados(5)
     asyncio.run(enviar_para_azure(dados))
