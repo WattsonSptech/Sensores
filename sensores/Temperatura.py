@@ -21,9 +21,3 @@ class Temperatura(ISimuladorSensor):
 
         return Registro(self.nome_sensor, self.unidade, temperatura)
 
-    def gerar_dados(self, quantidade):
-        for _ in range(quantidade):
-            registro = self.__formula_sensor__()
-            print(registro)
-
-Temperatura().gerar_dados(10)

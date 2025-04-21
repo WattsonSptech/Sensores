@@ -10,12 +10,13 @@ from sensores.Corrente import Corrente
 from sensores.Frequencia import Frequencia
 from sensores.Harmonica import Harmonica
 from sensores.Potencia import Potencia
+from sensores.Temperatura import Temperatura
 from sensores.Tensao import Tensao
 from azure.iot.device.aio import IoTHubDeviceClient
 
 def obter_dados(quantidade):
     dados = []
-    sensores = (Corrente, Frequencia, Harmonica, Potencia, Tensao)
+    sensores = (Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura)
 
     for s in sensores:
         dados.extend(s().gerar_dados(quantidade))
