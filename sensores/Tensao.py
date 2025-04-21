@@ -8,7 +8,7 @@ class Tensao(ISimuladorSensor):
     __VALOR_BASE__ = 23000
 
     def __init__(self) -> None:
-        self.nome_sensor = "XPTO"
+        self.nome_sensor = "LV25-P"
         self.unidade = "volts"
 
     def __formula_sensor__(self):
