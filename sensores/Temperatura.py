@@ -1,5 +1,5 @@
-from ISimuladorSensor import ISimuladorSensor
-from Registro import Registro
+from interfaces.ISimuladorSensor import ISimuladorSensor
+from interfaces.Registro import Registro
 import numpy as np
 
 class Temperatura(ISimuladorSensor):
