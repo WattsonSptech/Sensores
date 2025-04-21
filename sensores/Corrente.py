@@ -1,4 +1,4 @@
-from random import random
+import random
 from interfaces.ISimuladorSensor import ISimuladorSensor
 
 class Corrente(ISimuladorSensor):
