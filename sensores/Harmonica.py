@@ -54,5 +54,3 @@ class Harmonica(ISimuladorSensor):
             harmonics = 100.00
 
         return harmonics
-
-Harmonica().gerar_dados(5)

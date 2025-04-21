@@ -13,8 +13,7 @@ class ISimuladorSensor:
             r = Registro(self.nome_sensor, self.unidade, valor)
 
             registros.append(r)
-            print(r)
-        
+
         return registros
 
     @abstractmethod
