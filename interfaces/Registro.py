@@ -13,7 +13,8 @@ class Registro:
 
     def to_json(self) -> dict:
         return {
-            "sensor": self.sensor,
-            "unidade": self.unidade,
-            "valor": self.valor
+            "deviceID": "eda-watson",
+            # "sensor": self.sensor,
+            "valueType": self.unidade,
+            "value": self.valor
         }

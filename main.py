@@ -3,6 +3,7 @@ import json
 import os
 
 import dotenv
+from tqdm import tqdm
 
 from interfaces.Registro import Registro
 from sensores.Corrente import Corrente
@@ -17,7 +18,7 @@ def obter_dados(quantidade):
     sensores = (Corrente, Frequencia, Harmonica, Potencia, Tensao)
 
     for s in sensores:
-        dados.append(s().gerar_dados(quantidade))
+        dados.extend(s().gerar_dados(quantidade))
 
     return dados
 
@@ -29,11 +30,13 @@ async def enviar_para_azure(dados: list[Registro]):
     device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
 
     await device_client.connect()
+    print("Conectado com sucesso!")
 
-    print("Enviando dados...")
+    print("\nEnviando dados...")
     try:
-        await device_client.send_message(json.dumps(dados))
-        print("Sucesso")
+        for dado in tqdm(dados):
+            await device_client.send_message(json.dumps(dado))
+        print("\nSucesso!")
     except Exception as e:
         print("Falha:")
         raise e
@@ -42,5 +45,5 @@ async def enviar_para_azure(dados: list[Registro]):
 
 if __name__ == "__main__":
     dotenv.load_dotenv()
-    dados = obter_dados(5)
+    dados = obter_dados(100)
     asyncio.run(enviar_para_azure(dados))
