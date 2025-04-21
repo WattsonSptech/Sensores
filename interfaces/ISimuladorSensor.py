@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
-from Registro import Registro
+from abc import abstractmethod
+from interfaces.Registro import Registro
+
 
 class ISimuladorSensor:
     nome_sensor: str
@@ -8,7 +9,8 @@ class ISimuladorSensor:
     def gerar_dados(self, vezes: int) -> list[Registro]:
         registros = []
         for i in range(vezes):
-            r = self.__formula_sensor__()
+            valor = self.__formula_sensor__()
+            r = Registro(self.nome_sensor, self.unidade, valor)
 
             registros.append(r)
             print(r)
@@ -16,5 +18,5 @@ class ISimuladorSensor:
         return registros
 
     @abstractmethod
-    def __formula_sensor__(self) -> Registro:
+    def __formula_sensor__(self) -> float|int:
         pass

@@ -1,6 +1,7 @@
-from ISimuladorSensor import ISimuladorSensor
-from Registro import Registro
 import numpy as np
+from interfaces.ISimuladorSensor import ISimuladorSensor
+from interfaces.Registro import Registro
+
 
 class Tensao(ISimuladorSensor):
     
@@ -20,7 +21,4 @@ class Tensao(ISimuladorSensor):
             pico = -pico
 
         tensao = self.__VALOR_BASE__ + variacao_moment + pico
-
-        return Registro(self.nome_sensor, self.unidade, tensao)
-
-Tensao().gerar_dados(5)
+        return tensao
