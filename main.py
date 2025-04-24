@@ -1,10 +1,9 @@
 import asyncio
 import json
 import os
-
 import dotenv
 from tqdm import tqdm
-
+from interfaces.EnumCenarios import EnumCenarios
 from interfaces.Registro import Registro
 from sensores.Corrente import Corrente
 from sensores.Frequencia import Frequencia
@@ -14,16 +13,20 @@ from sensores.Temperatura import Temperatura
 from sensores.Tensao import Tensao
 from azure.iot.device.aio import IoTHubDeviceClient
 
-def obter_dados(quantidade):
+def obter_dados(quantidade: int, cenario: EnumCenarios):
     dados = []
     sensores = (Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura)
 
+    print(f"Gerando dados de {sensores}")
+    print(f"{quantidade} valores de cada, no cenário {cenario.name}\n")
     for s in sensores:
-        dados.extend(s().gerar_dados(quantidade))
+        dados.extend(s().gerar_dados(quantidade, cenario))
 
     return dados
 
 async def enviar_para_azure(dados: list[Registro]):
+    print("Tentando conexão com a nuvem para enviar os dados...")
+
     conn_str = os.getenv("AZURE_CREDENTIALS")
     if conn_str is None or conn_str == "":
         raise ValueError("Variável de ambiente \"AZURE_CREDENTIALS\" indefinida ou inválida.")
@@ -37,14 +40,14 @@ async def enviar_para_azure(dados: list[Registro]):
     try:
         for dado in tqdm(dados):
             await device_client.send_message(json.dumps(dado))
-        print("\nSucesso!")
+        print("\n[😃] Sucesso!")
     except Exception as e:
-        print("Falha:")
+        print("\n[!] Falha:")
         raise e
     finally:
         await device_client.shutdown()
 
 if __name__ == "__main__":
     dotenv.load_dotenv()
-    dados = obter_dados(100)
-    asyncio.run(enviar_para_azure(dados))
+    dados_simulados = obter_dados(100, EnumCenarios.NORMAL)
+    asyncio.run(enviar_para_azure(dados_simulados))
