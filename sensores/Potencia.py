@@ -3,6 +3,7 @@ import numpy as np
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from sensores.Corrente import Corrente
 from sensores.Tensao import Tensao
+from interfaces.EnumCenarios import EnumCenarios
 
 class Potencia(ISimuladorSensor):
 
@@ -18,7 +19,7 @@ class Potencia(ISimuladorSensor):
         self.nome_sensor = "SDM630"
         self.unidade = "watts"
     
-    def __formula_sensor__(self) -> float|int:
+    def __formula_sensor__(self, cenario: EnumCenarios) -> float|int:
         # tensao = round(random.uniform(80, 260), 1)
         # corrente = round(random.uniform(0, 100), 2)
         tensao = self.__TENSAO__.__formula_sensor__()
@@ -26,13 +27,23 @@ class Potencia(ISimuladorSensor):
 
         potencia_aparente = round(tensao * corrente, 1)
     
+        prob_critica = 0.03
+        prob_alerta = 0.08
+        match cenario:
+            case cenario.TERRIVEL:
+                prob_critica = 0.80
+                prob_alerta = 0.95
+            case cenario.EXCEPCIONAL:
+                prob_critica = 0.80
+                prob_alerta = 0.95
+
         # Variáveis para simulação do fator de potencia
         porcent = random.random()
-    
+
         # Logica para casos
-        if porcent < self.__PROB_CRITICA__:
+        if porcent < prob_critica:
             fator_potencia = round(random.uniform(0.60, 0.80), 3)
-        elif porcent < self.__PROB_CRITICA__ + self.__PROB_ALERTA__:
+        elif porcent < prob_alerta:
             fator_potencia = round(random.uniform(0.80, 0.92), 3)
         else:
             fator_potencia = np.random.normal(
