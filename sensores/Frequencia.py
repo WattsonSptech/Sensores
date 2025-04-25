@@ -33,4 +33,4 @@ class Frequencia(ISimuladorSensor):
             pico -= somador
 
         frequencia = self.__VALOR_BASE__ + variacao_moment + pico
-        return frequencia
+        return Registro(self.nome_sensor, self.unidade, frequencia)
