@@ -15,7 +15,7 @@ from azure.iot.device.aio import IoTHubDeviceClient
 
 def obter_dados(quantidade: int, cenario: EnumCenarios):
     dados = []
-    sensores = (Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura)
+    sensores = [Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura]
 
     print(f"Gerando dados de {sensores}")
     print(f"{quantidade} valores de cada, no cenário {cenario.name}\n")
@@ -50,4 +50,5 @@ async def enviar_para_azure(dados: list[Registro]):
 if __name__ == "__main__":
     dotenv.load_dotenv()
     dados_simulados = obter_dados(100, EnumCenarios.NORMAL)
+    print(dados_simulados)
     asyncio.run(enviar_para_azure(dados_simulados))
