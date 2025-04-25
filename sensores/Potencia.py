@@ -31,11 +31,11 @@ class Potencia(ISimuladorSensor):
         prob_alerta = 0.08
         match cenario:
             case cenario.TERRIVEL:
-                prob_critica = 0.80
+                prob_critica = 0.70
                 prob_alerta = 0.95
             case cenario.EXCEPCIONAL:
-                prob_critica = 0.80
-                prob_alerta = 0.95
+                prob_critica = 0.005
+                prob_alerta = 0.01
 
         # Variáveis para simulação do fator de potencia
         porcent = random.random()
