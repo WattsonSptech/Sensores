@@ -22,8 +22,8 @@ class Potencia(ISimuladorSensor):
     def __formula_sensor__(self, cenario: EnumCenarios) -> float|int:
         # tensao = round(random.uniform(80, 260), 1)
         # corrente = round(random.uniform(0, 100), 2)
-        tensao = self.__TENSAO__.__formula_sensor__()
-        corrente = self.__CORRENTE__.__formula_sensor__()
+        tensao = self.__TENSAO__.__formula_sensor__(cenario)
+        corrente = self.__CORRENTE__.__formula_sensor__(cenario)
 
         potencia_aparente = round(tensao * corrente, 1)
     
