@@ -15,12 +15,20 @@ from azure.iot.device.aio import IoTHubDeviceClient
 
 def obter_dados(quantidade: int, cenario: EnumCenarios):
     dados = []
+    memoria = []
+    cpu = []
     sensores = [Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura]
     
     print(f"Gerando dados de {sensores}")
     print(f"{quantidade} valores de cada, no cenário {cenario.name}\n")
     for s in sensores:
-        dados.extend(s().gerar_dados(quantidade, cenario))
+        result = s().gerar_dados(quantidade, cenario)
+        dados.extend(result[0])
+        cpu.extend(result[1])
+        memoria.extend(result[2])
+
+    print('cpu', cpu)
+    print('memoria', memoria)
 
     return dados
 

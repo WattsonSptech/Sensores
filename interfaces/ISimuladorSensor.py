@@ -20,7 +20,7 @@ class ISimuladorSensor:
             cpu.append(r.usoCpu)
             memory.append(r.usoMemoria) 
 
-        return registros
+        return [registros, cpu, memory]
 
     @abstractmethod
     def __formula_sensor__(self, cenario: EnumCenarios) -> float|int:
