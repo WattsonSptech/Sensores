@@ -12,7 +12,7 @@ class Registro:
         self.sensor = sensor
         self.unidade = unidade
         self.valor = valor
-        self.usoCpu = ps.cpu_percent()
+        self.usoCpu = ps.cpu_percent(interval=0.1)
         self.usoMemoria = ps.virtual_memory().percent
 
 
