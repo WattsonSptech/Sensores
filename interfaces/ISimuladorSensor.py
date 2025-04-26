@@ -10,6 +10,7 @@ class ISimuladorSensor:
 
     def gerar_dados(self, vezes: int, cenario: EnumCenarios) -> list[Registro]:
         registros = []
+        
         for i in range(vezes):
             valor = self.__formula_sensor__(cenario)
             r = Registro(self.nome_sensor, self.unidade, valor)
