@@ -51,4 +51,4 @@ if __name__ == "__main__":
     dotenv.load_dotenv()
     dados_simulados = obter_dados(100, EnumCenarios.NORMAL)
     print(dados_simulados)
-    asyncio.run(enviar_para_azure(dados_simulados))
+    # asyncio.run(enviar_para_azure(dados_simulados))
