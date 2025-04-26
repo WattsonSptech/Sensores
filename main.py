@@ -2,6 +2,8 @@ import asyncio
 import json
 import os
 import dotenv
+import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 from interfaces.EnumCenarios import EnumCenarios
 from interfaces.Registro import Registro
@@ -30,7 +32,19 @@ def obter_dados(quantidade: int, cenario: EnumCenarios):
     print('cpu', cpu)
     print('memoria', memoria)
 
+    plot("CPU", cpu)
+    plot("MEMÓRIA", memoria)
+
     return dados
+
+def plot(x, y):
+    xpoints = np.array(list(range(0, len(y))))
+    ypoints = np.array(y)
+    plt.xlabel("Indice")
+    plt.ylabel(x + " %")
+    plt.title(x)
+    plt.plot(xpoints, ypoints)
+    plt.show()
 
 async def enviar_para_azure(dados: list[Registro]):
     print("Tentando conexão com a nuvem para enviar os dados...")
