@@ -10,11 +10,15 @@ class ISimuladorSensor:
 
     def gerar_dados(self, vezes: int, cenario: EnumCenarios) -> list[Registro]:
         registros = []
+        cpu = []
+        memory = []
         
         for i in range(vezes):
             valor = self.__formula_sensor__(cenario)
             r = Registro(self.nome_sensor, self.unidade, valor)
             registros.append(r.to_json())
+            cpu.append(r.usoCpu)
+            memory.append(r.usoMemoria) 
 
         return registros
 
