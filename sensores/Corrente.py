@@ -19,7 +19,7 @@ class Corrente(ISimuladorSensor):
                 primary_current = round(random.randint(400, self.__MAX_CURRENT__), 4)
                 percentual = primary_current / self.__MAX_CURRENT__ * 100
             case cenario.TERRIVEL:
-                primary_current = round(random.randint(700, 120), 4)
+                primary_current = round(random.randint(self.__MAX_CURRENT__, 1200), 4)
                 percentual = primary_current / self.__MAX_CURRENT__ * 100
             case cenario.EXCEPCIONAL:
                 primary_current = round(random.randint(80, 400), 4)
@@ -27,7 +27,7 @@ class Corrente(ISimuladorSensor):
 
         if percentual > 50 and percentual <= 100:
             secundary_current = 5
-        elif percentual >= 87.5 and percentual <= 120:
+        elif percentual > 100 and percentual <= 150:
             secundary_current = round(primary_current / self.__ENROLL_PROPORTION__, 2)
         elif percentual >= 10 and percentual <= 50:
             secundary_current = round(primary_current / self.__ENROLL_PROPORTION__, 2)
