@@ -31,4 +31,4 @@ class Temperatura(ISimuladorSensor):
 
         temperatura = self.__VALOR_BASE__ + variacao_moment + pico
 
-        return Registro(self.nome_sensor, self.unidade, temperatura)
+        return temperatura
