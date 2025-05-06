@@ -29,7 +29,7 @@ class Corrente():
 
         plt.xlabel('índice')
         plt.ylabel('Amperes')
-        plt.title('Scatter Plot - Ampere')
+        plt.title('Gráfico de dispersão - Ampere')
         plt.grid(True)
         plt.axhline(y=5, color='gray', linestyle='--', label='Limite normal')
         desvios_negativos = np.abs(filtered_data["Terrivel"] - 5)
