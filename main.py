@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import json
 import os
 import dotenv
@@ -17,7 +18,7 @@ def obter_dados(quantidade: int, cenario: EnumCenarios):
     dados = []
     sensores = [Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura]
 
-    print(f"Gerando dados de {sensores}")
+    print(f"Gerando dados de {", ".join([s.__name__ for s in sensores])}")
     print(f"{quantidade} valores de cada, no cenário {cenario.name}\n")
     for s in sensores:
         dados.extend(s().gerar_dados(quantidade, cenario))
@@ -47,8 +48,35 @@ async def enviar_para_azure(dados: list[Registro]):
     finally:
         await device_client.shutdown()
 
+def salvar_local(dados: list[Registro]):
+    print("Gravando dados localmente...")
+
+    path = "./logs"
+    filename = f"generation-{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.json"
+
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    with open(f"{path}/{filename}", 'w') as f:
+        json.dump([dict(d) for d in tqdm(dados)], f, indent=4)
+    print("\n[😃] Sucesso!")
+
 if __name__ == "__main__":
     dotenv.load_dotenv()
-    dados_simulados = obter_dados(100, EnumCenarios.NORMAL)
-    print(dados_simulados)
-    asyncio.run(enviar_para_azure(dados_simulados))
+
+    send_to_azure = os.getenv("SENT_TO_AZURE", "0")
+    record_logs = os.getenv("RECORD_LOGS", "0")
+    QTD_DADOS = 1000000
+    cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
+    dados_simulados = []
+
+    for c in cenarios:
+        print("\n================================")
+        print(f"Executando cenário: {c.name}\n")
+        dados_simulados.extend(obter_dados(QTD_DADOS, c))
+
+    if send_to_azure == "1":
+        asyncio.run(enviar_para_azure(dados_simulados))
+
+    if record_logs == "1":
+        salvar_local(dados_simulados)
