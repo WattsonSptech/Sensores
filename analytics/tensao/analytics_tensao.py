@@ -7,11 +7,12 @@ def executar():
 
     # == Carregamento e formatação do arquivo
     print("Lendo log...\n")
-    logs = glob("../logs/*")
+    logs = glob("../../logs/*")
     logs.sort()
     filename = logs[-1]
 
     df = pd.read_json(filename).sort_values("instant")
+    # df = df[df[""] == ""]
     df['instant'] = pd.to_datetime(df['instant'], format='ISO8601')
 
     fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(5, 18))
@@ -28,7 +29,7 @@ def executar():
         # == Criação do gráfico
         print(f"Criando gráfico {c}...")
         axes[i].scatter(
-            x=dataf['instant'], y=dataf['value'], edgecolors='w',
+            x=dataf['instant'], y=dataf['value'], edgecolors='b',
             alpha=0.7, # Optional: Transparency
             s=60 # Optional: Marker size
         )

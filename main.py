@@ -21,6 +21,7 @@ def obter_dados(quantidade: int, cenario: EnumCenarios):
     print(f"Gerando dados de {", ".join([s.__name__ for s in sensores])}")
     print(f"{quantidade} valores de cada, no cenário {cenario.name}\n")
     for s in sensores:
+        print(s.__name__)
         dados.extend(s().gerar_dados(quantidade, cenario))
 
     return dados
