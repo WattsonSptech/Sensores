@@ -19,11 +19,11 @@ class Tensao(ISimuladorSensor):
         propabilidade_pico: float
         match cenario:
             case cenario.TERRIVEL:
-                propabilidade_pico = 0.1
+                propabilidade_pico = 0.008
             case cenario.EXCEPCIONAL:
-                propabilidade_pico = 0.000001
+                propabilidade_pico = 0.000005
             case _:
-                propabilidade_pico = 0.001
+                propabilidade_pico = 0.00001
 
         pico = 0
         if np.random.rand() < propabilidade_pico:
