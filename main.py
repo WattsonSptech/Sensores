@@ -35,17 +35,16 @@ async def enviar_para_azure(dados: list[Registro]):
 
     device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
 
-    await device_client.connect()
-    print("Conectado com sucesso!")
-
-    print("\nEnviando dados...")
     try:
+        print("Conectado com sucesso!")
+        await device_client.connect()
+        
+        print("\nEnviando dados...")
         for dado in tqdm(dados):
             await device_client.send_message(json.dumps(dado))
         print("\n[😃] Sucesso!")
     except Exception as e:
-        print("\n[!] Falha:")
-        raise e
+        print(f"\n[!] Falha: {e}")
     finally:
         await device_client.shutdown()
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
 
     send_to_azure = os.getenv("SENT_TO_AZURE", "0")
     record_logs = os.getenv("RECORD_LOGS", "0")
-    QTD_DADOS = 1000000
+    QTD_DADOS = 100
     cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
     dados_simulados = []
 
