@@ -28,5 +28,5 @@ def gerar_grafico_temperatura():
     plt.savefig("grafico_temperatura.png")
     plt.show()
 
-if __name__ == "main":
+if __name__ == "__main__":
     gerar_grafico_temperatura()
