@@ -8,6 +8,7 @@ from interfaces.EnumCenarios import EnumCenarios
 class Harmonica(ISimuladorSensor):
 
     def __init__(self):
+        super().__init__()
         self.nome_sensor = "AcuRev 2100 Multi-Circuit"
         self.unidade = "Porcentagem"
 

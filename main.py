@@ -5,15 +5,9 @@ import json
 import os
 import dotenv
 from tqdm import tqdm
-from interfaces.EnumCenarios import EnumCenarios
-from interfaces.Registro import Registro
-from sensores.Corrente import Corrente
-from sensores.Frequencia import Frequencia
-from sensores.Harmonica import Harmonica
-from sensores.Potencia import Potencia
-from sensores.Temperatura import Temperatura
-from sensores.Tensao import Tensao
 from azure.iot.device.aio import IoTHubDeviceClient
+from interfaces.EnumCenarios import EnumCenarios
+from sensores import Corrente, Frequencia, Harmonica, Potencia, Temperatura, Tensao
 
 def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
     print(f"Cenário {cenario.name}")
