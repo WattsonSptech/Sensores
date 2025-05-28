@@ -26,15 +26,13 @@ async def enviar_para_azure(dados: list[dict]):
     if conn_str is None or conn_str == "":
         raise ValueError("Variável de ambiente \"AZURE_CREDENTIALS\" indefinida ou inválida.")
 
-    dados_json_str = str([json.dumps(d) for d in dados])
-
     device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
     try:
         print("Tentando se conectar com a Azure...")
         await device_client.connect()
 
         print("Enviando dados...")
-        await device_client.send_message(dados_json_str)
+        await device_client.send_message(json.dumps(dados))
         print("[😃] Sucesso!")
     except Exception as e:
         print(f"\n[!] Falha: {e}")
