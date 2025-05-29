@@ -8,6 +8,7 @@ class Corrente(ISimuladorSensor):
     __ENROLL_PROPORTION__ = 160
 
     def __init__(self) -> None:
+        super().__init__()
         self.nome_sensor = "RCI-32"
         self.unidade = "ampére"
 

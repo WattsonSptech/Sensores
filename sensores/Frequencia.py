@@ -9,6 +9,7 @@ class Frequencia(ISimuladorSensor):
     __VALOR_BASE__ = 60
 
     def __init__(self) -> None:
+        super().__init__()
         self.nome_sensor = "FrequencyGet"
         self.unidade = "Hz"
 

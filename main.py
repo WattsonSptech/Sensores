@@ -3,17 +3,13 @@ import traceback
 from datetime import datetime
 import json
 import os
+from math import ceil
+
 import dotenv
 from tqdm import tqdm
-from interfaces.EnumCenarios import EnumCenarios
-from interfaces.Registro import Registro
-from sensores.Corrente import Corrente
-from sensores.Frequencia import Frequencia
-from sensores.Harmonica import Harmonica
-from sensores.Potencia import Potencia
-from sensores.Temperatura import Temperatura
-from sensores.Tensao import Tensao
 from azure.iot.device.aio import IoTHubDeviceClient
+from interfaces.EnumCenarios import EnumCenarios
+from sensores import Corrente, Frequencia, Harmonica, Potencia, Temperatura, Tensao
 
 def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
     print(f"Cenário {cenario.name}")
@@ -32,15 +28,28 @@ async def enviar_para_azure(dados: list[dict]):
     if conn_str is None or conn_str == "":
         raise ValueError("Variável de ambiente \"AZURE_CREDENTIALS\" indefinida ou inválida.")
 
-    dados_json_str = str([json.dumps(d) for d in dados])
-
     device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
     try:
         print("Tentando se conectar com a Azure...")
         await device_client.connect()
 
         print("Enviando dados...")
-        await device_client.send_message(dados_json_str)
+
+        json_strs = [json.dumps(d) for d in dados]
+        total_size_in_kb = sum([len(j) / 1024 for j in json_strs])
+        qtt_messages = ceil(total_size_in_kb / 256)
+
+        slice_size = int(len(json_strs) / qtt_messages)
+        start_idx = 0
+        end_idx = slice_size
+
+        print(f"Iniciando o envio dos dados em {qtt_messages} fatia{"s" if qtt_messages > 1 else ""}...")
+        for _ in tqdm(range(qtt_messages)):
+            await device_client.send_message(json.dumps(dados[start_idx:end_idx]))
+
+            start_idx += slice_size
+            end_idx += slice_size
+
         print("[😃] Sucesso!")
     except Exception as e:
         print(f"\n[!] Falha: {e}")

@@ -16,6 +16,7 @@ class Potencia(ISimuladorSensor):
     __PROB_ALERTA__ = 0.08
 
     def __init__(self):
+        super().__init__()
         self.nome_sensor = "SDM630"
         self.unidade = "watts"
     

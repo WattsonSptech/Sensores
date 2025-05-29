@@ -8,6 +8,7 @@ class Temperatura(ISimuladorSensor):
     __VALOR_BASE__ = 72.5 
 
     def __init__(self) -> None:
+        super().__init__()
         self.nome_sensor = "IR MLX90614"
         self.unidade = "°C"
 
