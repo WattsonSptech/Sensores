@@ -18,10 +18,9 @@ class ISimuladorSensor:
     def gerar_dados(self, vezes: int, cenario: EnumCenarios) -> list[dict]:
         registros = []
 
-        zonas = [z.name for z in EnumZonas]
-        vezes_por_zona = ceil(vezes / len(zonas))
+        vezes_por_zona = ceil(vezes / len(EnumZonas))
         zona_por_registro = []
-        for z in zonas:
+        for z in EnumZonas:
             [zona_por_registro.append(z) for _ in range(vezes_por_zona)]
 
         for i in tqdm(range(vezes)):
@@ -30,7 +29,7 @@ class ISimuladorSensor:
 
             r = Registro(
                 self.nome_sensor, self.unidade, valor, self.instante, cenario,
-                zonas[i]
+                zona_por_registro[i]
             )
             registros.append(r.to_json())
 
