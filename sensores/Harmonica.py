@@ -3,6 +3,7 @@
 from random import uniform, randint
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from interfaces.EnumCenarios import EnumCenarios
+from math import sqrt
 
 
 class Harmonica(ISimuladorSensor):
@@ -12,26 +13,24 @@ class Harmonica(ISimuladorSensor):
         self.unidade = "Porcentagem"
 
     def __formula_sensor__(self, cenario):
+
+        FUNDAMENTAL_TENSION = 13.80
+
         if (cenario == EnumCenarios.EXCEPCIONAL):
-            minimum = 0.00
-            maximum = 1.00
+            orders = 1
+            min_tension = 13.79
+            max_tension = FUNDAMENTAL_TENSION
         elif (cenario == EnumCenarios.NORMAL):
-            minimum = 1.00
-            maximum = 5.00
+            orders = randint(3, 4)
+            min_tension = 12.00
+            max_tension = 13.78
         elif (cenario == EnumCenarios.TERRIVEL):
-            minimum = 5.00
-            maximum = 100.00
+            orders = randint(5, 20)
+            min_tension = 6.00
+            max_tension = 11.09
 
-        accuracy = 1.0
+        total_tension = 0
+        for i in range (orders):
+            total_tension += pow((uniform(min_tension, max_tension)) * -i, 2)
 
-        is_accuracy_positive_or_negative = randint(0, 1)
-
-        harmonics = round((accuracy + (uniform(minimum, maximum)) if is_accuracy_positive_or_negative == 0 else (uniform(
-            minimum, maximum)) - accuracy),2)
-
-        if harmonics < 0:
-            harmonics = 0.01
-        if harmonics > 100:
-            harmonics = 100.00
-
-        return harmonics
+        return round(sqrt(total_tension)/FUNDAMENTAL_TENSION, 2)
