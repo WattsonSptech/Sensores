@@ -3,6 +3,8 @@ import traceback
 from datetime import datetime
 import json
 import os
+from math import ceil
+
 import dotenv
 from tqdm import tqdm
 from azure.iot.device.aio import IoTHubDeviceClient
@@ -32,7 +34,22 @@ async def enviar_para_azure(dados: list[dict]):
         await device_client.connect()
 
         print("Enviando dados...")
-        await device_client.send_message(json.dumps(dados))
+
+        json_strs = [json.dumps(d) for d in dados]
+        total_size_in_kb = sum([len(j) / 1024 for j in json_strs])
+        qtt_messages = ceil(total_size_in_kb / 256)
+
+        slice_size = int(len(json_strs) / qtt_messages)
+        start_idx = 0
+        end_idx = slice_size
+
+        print(f"Iniciando o envio dos dados em {qtt_messages} fatia{"s" if qtt_messages > 1 else ""}...")
+        for _ in tqdm(range(qtt_messages)):
+            await device_client.send_message(json.dumps(dados[start_idx:end_idx]))
+
+            start_idx += slice_size
+            end_idx += slice_size
+
         print("[😃] Sucesso!")
     except Exception as e:
         print(f"\n[!] Falha: {e}")
