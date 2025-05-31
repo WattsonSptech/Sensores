@@ -24,7 +24,7 @@ class ISimuladorSensor:
             [zona_por_registro.append(z) for _ in range(vezes_por_zona)]
 
         for i in tqdm(range(vezes)):
-            valor = self.__formula_sensor__(cenario)
+            valor = self.__formula_sensor__(cenario, zona_por_registro[i])
             self.instante = self.instante + timedelta(minutes=15 * i - 15)
 
             r = Registro(
@@ -36,5 +36,5 @@ class ISimuladorSensor:
         return registros
 
     @abstractmethod
-    def __formula_sensor__(self, cenario: EnumCenarios) -> float|int:
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas = None) -> float|int:
         pass

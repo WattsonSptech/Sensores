@@ -4,6 +4,7 @@ from random import uniform, randint
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from interfaces.EnumCenarios import EnumCenarios
 from math import sqrt
+from interfaces.EnumZonas import EnumZonas
 
 
 class Harmonica(ISimuladorSensor):
@@ -13,7 +14,7 @@ class Harmonica(ISimuladorSensor):
         self.nome_sensor = "AcuRev 2100 Multi-Circuit"
         self.unidade = "Porcentagem"
 
-    def __formula_sensor__(self, cenario):
+    def __formula_sensor__(self, cenario, zona):
 
         FUNDAMENTAL_TENSION = 13.80
 
