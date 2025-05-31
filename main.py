@@ -1,18 +1,15 @@
-import asyncio
-import traceback
 from datetime import datetime
 import json
 import os
-from math import ceil
-
+from math import floor
+from time import sleep
 import dotenv
 from tqdm import tqdm
-from azure.iot.device.aio import IoTHubDeviceClient
+from azure_helper import AzureHelper
 from interfaces.EnumCenarios import EnumCenarios
 from sensores import Corrente, Frequencia, Harmonica, Potencia, Temperatura, Tensao
 
 def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
-    print(f"Cenário {cenario.name}")
     dados = []
     sensores = [Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura]
 
@@ -21,55 +18,16 @@ def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
 
     return dados
 
-async def enviar_para_azure(dados: list[dict]):
-    print("\n[ENVIO DE DADOS PARA A AZURE]\n")
-
-    conn_str = os.getenv("AZURE_CREDENTIALS")
-    if conn_str is None or conn_str == "":
-        raise ValueError("Variável de ambiente \"AZURE_CREDENTIALS\" indefinida ou inválida.")
-
-    device_client = IoTHubDeviceClient.create_from_connection_string(conn_str)
-    try:
-        print("Tentando se conectar com a Azure...")
-        await device_client.connect()
-
-        print("Enviando dados...")
-
-        json_strs = [json.dumps(d) for d in dados]
-        total_size_in_kb = sum([len(j) / 1024 for j in json_strs])
-        qtt_messages = ceil(total_size_in_kb / 256)
-
-        slice_size = int(len(json_strs) / qtt_messages)
-        start_idx = 0
-        end_idx = slice_size
-
-        print(f"Iniciando o envio dos dados em {qtt_messages} fatia{"s" if qtt_messages > 1 else ""}...")
-        for _ in tqdm(range(qtt_messages)):
-            await device_client.send_message(json.dumps(dados[start_idx:end_idx]))
-
-            start_idx += slice_size
-            end_idx += slice_size
-
-        print("[😃] Sucesso!")
-    except Exception as e:
-        print(f"\n[!] Falha: {e}")
-        traceback.print_exc()
-
-    finally:
-        await device_client.shutdown()
-
 def salvar_local(dados: list[dict]):
-    print("\n[GRAVAÇÃO DE DADOS LOCAL]\n")
-
     path = "./logs"
-    filename = f"generation-{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.json"
+    filename = f"generation-{datetime.now().strftime("%d-%m-%Y_%H-%M-%S .%f")[:-3]}.json"
 
     if not os.path.exists(path):
         os.mkdir(path)
 
     with open(f"{path}/{filename}", 'w') as f:
-        json.dump([dict(d) for d in tqdm(dados)], f, indent=4)
-    print("[😃] Sucesso!")
+        json.dump([dict(d) for d in dados], f, indent=4)
+    print("\t[😃] Sucesso!")
 
 if __name__ == "__main__":
     print("GERADOR DE DADOS ALGAS")
@@ -77,18 +35,34 @@ if __name__ == "__main__":
     print()
     dotenv.load_dotenv()
 
-    send_to_azure = os.getenv("SENT_TO_AZURE", "0")
-    record_logs = os.getenv("RECORD_LOGS", "0")
-    QTD_DADOS = int(os.getenv("DATA_LENGTH", "0"))
+    send_to_azure = os.getenv("SENT_TO_AZURE", "0") == "1"
+    record_logs = os.getenv("RECORD_LOGS", "0") == "1"
+    gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
+    package_length = int(os.getenv("PACKAGE_DATA_LENGTH", "0"))
+
+    azh = None
+    if send_to_azure:
+        print()
+        azh = AzureHelper()
+        print()
 
     cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
-    dados_simulados = []
-    print("\n[GERAÇÃO DE DADOS]\n")
-    for c in cenarios:
-        dados_simulados.extend(obter_dados_cenario(QTD_DADOS, c))
+    while True:
 
-    if send_to_azure == "1":
-        asyncio.run(enviar_para_azure(dados_simulados))
+        print("\tGerando dados...")
+        dados_simulados = []
+        for c in cenarios:
+            dados_simulados.extend(obter_dados_cenario(floor(package_length / len(cenarios)), c))
 
-    if record_logs == "1":
-        salvar_local(dados_simulados)
+        if azh is not None:
+            print("\n\tEnviando dados para Azure...")
+            azh.send_data(dados_simulados)
+
+        if record_logs:
+            print("\n\tGravando dados para locamente...")
+            salvar_local(dados_simulados)
+
+        print("\n")
+        for _ in tqdm(range(0, gen_timeout), desc="\tSegundos para a próxima geração"):
+            sleep(1)
+        print("\n")
