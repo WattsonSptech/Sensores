@@ -1,11 +1,9 @@
 from abc import abstractmethod
 from datetime import datetime, timedelta
 from math import ceil
-
 from interfaces.EnumCenarios import EnumCenarios
 from interfaces.EnumZonas import EnumZonas
 from interfaces.Registro import Registro
-from tqdm import tqdm
 
 class ISimuladorSensor:
     nome_sensor: str
@@ -23,7 +21,7 @@ class ISimuladorSensor:
         for z in EnumZonas:
             [zona_por_registro.append(z) for _ in range(vezes_por_zona)]
 
-        for i in tqdm(range(vezes)):
+        for i in range(vezes):
             valor = self.__formula_sensor__(cenario, zona_por_registro[i])
             self.instante = self.instante + timedelta(minutes=15 * i - 15)
 
