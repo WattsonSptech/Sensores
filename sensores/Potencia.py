@@ -4,6 +4,7 @@ from interfaces.ISimuladorSensor import ISimuladorSensor
 from sensores.Corrente import Corrente
 from sensores.Tensao import Tensao
 from interfaces.EnumCenarios import EnumCenarios
+from interfaces.EnumZonas import EnumZonas
 
 class Potencia(ISimuladorSensor):
 
@@ -20,11 +21,11 @@ class Potencia(ISimuladorSensor):
         self.nome_sensor = "SDM630"
         self.unidade = "watts"
     
-    def __formula_sensor__(self, cenario: EnumCenarios) -> float|int:
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas) -> float|int:
         # tensao = round(random.uniform(80, 260), 1)
         # corrente = round(random.uniform(0, 100), 2)
-        tensao = self.__TENSAO__.__formula_sensor__(cenario)
-        corrente = self.__CORRENTE__.__formula_sensor__(cenario)
+        tensao = self.__TENSAO__.__formula_sensor__(cenario, zona)
+        corrente = self.__CORRENTE__.__formula_sensor__(cenario, zona)
 
         potencia_aparente = round(tensao * corrente, 1)
     

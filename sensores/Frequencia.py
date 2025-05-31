@@ -3,6 +3,7 @@ import numpy as np
 from interfaces.EnumCenarios import EnumCenarios
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from interfaces.Registro import Registro
+from interfaces.EnumZonas import EnumZonas
 
 
 class Frequencia(ISimuladorSensor):
@@ -13,7 +14,7 @@ class Frequencia(ISimuladorSensor):
         self.nome_sensor = "FrequencyGet"
         self.unidade = "Hz"
 
-    def __formula_sensor__(self, cenario: EnumCenarios):
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas = None):
         variacao_moment = np.random.normal(0, 0.1)
 
         somador = 0
