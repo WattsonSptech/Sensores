@@ -19,7 +19,7 @@ class Potencia(ISimuladorSensor):
     def __init__(self):
         super().__init__()
         self.nome_sensor = "SDM630"
-        self.unidade = "watts"
+        self.unidade = "fator"
     
     def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas) -> float|int:
         # tensao = round(random.uniform(80, 260), 1)
