@@ -1,5 +1,6 @@
 # Sensor Utilizado: AcuRev 2100 Multi-Circuit
 # https://www.accuenergy.com/wp-content/uploads/AcuRev-2100-Multi-Circuit-Submeter-Datasheet.pdf
+from datetime import datetime
 from random import uniform, randint
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from interfaces.EnumCenarios import EnumCenarios
@@ -14,7 +15,7 @@ class Harmonica(ISimuladorSensor):
         self.nome_sensor = "AcuRev 2100 Multi-Circuit"
         self.unidade = "Porcentagem"
 
-    def __formula_sensor__(self, cenario, zona):
+    def __formula_sensor__(self, cenario, zona, instante: datetime):
 
         FUNDAMENTAL_TENSION = 13.80
 

@@ -1,4 +1,6 @@
 import random
+from datetime import datetime
+
 from interfaces.EnumCenarios import EnumCenarios
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from interfaces.EnumZonas import EnumZonas
@@ -13,7 +15,7 @@ class Corrente(ISimuladorSensor):
         self.nome_sensor = "RCI-32"
         self.unidade = "ampére"
 
-    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas = None):
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas, instante: datetime):
 
         percentual = 0
         match cenario:

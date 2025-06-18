@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 
 from interfaces.EnumCenarios import EnumCenarios
@@ -14,7 +16,7 @@ class Frequencia(ISimuladorSensor):
         self.nome_sensor = "FrequencyGet"
         self.unidade = "Hz"
 
-    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas = None):
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas, instante: datetime):
         variacao_moment = np.random.normal(0, 0.1)
 
         somador = 0

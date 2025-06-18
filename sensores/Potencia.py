@@ -1,4 +1,6 @@
 import random
+from datetime import datetime
+
 import numpy as np
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from sensores.Corrente import Corrente
@@ -21,11 +23,11 @@ class Potencia(ISimuladorSensor):
         self.nome_sensor = "SDM630"
         self.unidade = "fator"
     
-    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas) -> float|int:
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas, instante: datetime) -> float|int:
         # tensao = round(random.uniform(80, 260), 1)
         # corrente = round(random.uniform(0, 100), 2)
-        tensao = self.__TENSAO__.__formula_sensor__(cenario, zona)
-        corrente = self.__CORRENTE__.__formula_sensor__(cenario, zona)
+        tensao = self.__TENSAO__.__formula_sensor__(cenario, zona, instante)
+        corrente = self.__CORRENTE__.__formula_sensor__(cenario, zona, instante)
 
         potencia_aparente = round(tensao * corrente, 1)
     

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from interfaces.ISimuladorSensor import ISimuladorSensor
 from interfaces.EnumCenarios import EnumCenarios
 from interfaces.Registro import Registro
@@ -13,7 +15,7 @@ class Temperatura(ISimuladorSensor):
         self.nome_sensor = "IR MLX90614"
         self.unidade = "°C"
 
-    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas = None):
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas, instante: datetime):
         variacao_moment = np.random.normal(0, 1.5)
 
         propabilidade_pico: float
