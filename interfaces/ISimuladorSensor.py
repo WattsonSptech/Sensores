@@ -4,35 +4,30 @@ from math import ceil
 from interfaces.EnumCenarios import EnumCenarios
 from interfaces.EnumZonas import EnumZonas
 from interfaces.Registro import Registro
+from random import randint
 
 class ISimuladorSensor:
     nome_sensor: str
     unidade: str
-    instante: datetime
-
-    def __init__(self):
-        self.instante = datetime.fromisoformat("1980-01-01")
 
     def gerar_dados(self, vezes: int, cenario: EnumCenarios) -> list[dict]:
         registros = []
 
-        vezes_por_zona = ceil(vezes / len(EnumZonas))
-        zona_por_registro = []
-        for z in EnumZonas:
-            [zona_por_registro.append(z) for _ in range(vezes_por_zona)]
+        zonas = [z for z in EnumZonas]
+        instante = datetime.now()
 
-        for i in range(vezes):
-            valor = self.__formula_sensor__(cenario, zona_por_registro[i])
-            self.instante = self.instante + timedelta(minutes=15 * i - 15)
+        for _ in range(vezes):
+            for z in zonas:
+                valor = self.__formula_sensor__(cenario, z, instante)
+                registros.append(Registro(
+                    self.nome_sensor, self.unidade, valor, instante, cenario,
+                    z
+                ).to_json())
 
-            r = Registro(
-                self.nome_sensor, self.unidade, valor, self.instante, cenario,
-                zona_por_registro[i]
-            )
-            registros.append(r.to_json())
+                instante = instante - timedelta(hours=randint(1, 48))
 
         return registros
 
     @abstractmethod
-    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas = None) -> float|int:
+    def __formula_sensor__(self, cenario: EnumCenarios, zona: EnumZonas, instante: datetime) -> float|int:
         pass
