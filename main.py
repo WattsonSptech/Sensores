@@ -46,7 +46,8 @@ if __name__ == "__main__":
         azh = AzureHelper()
         print()
 
-    cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
+    # cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
+    cenarios = [EnumCenarios.NORMAL]
     while True:
 
         print("\tGerando dados...")
