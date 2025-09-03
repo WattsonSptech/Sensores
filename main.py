@@ -5,7 +5,8 @@ from math import floor
 from time import sleep
 import dotenv
 from tqdm import tqdm
-from azure_helper import AzureHelper
+import requests
+from aws_helper import AwsHelper
 from interfaces.EnumCenarios import EnumCenarios
 from sensores import Corrente, Frequencia, Harmonica, Potencia, Temperatura, Tensao
 
@@ -20,7 +21,7 @@ def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
 
 def salvar_local(dados: list[dict]):
     path = "./logs"
-    filename = f"generation-{datetime.now().strftime("%d-%m-%Y_%H-%M-%S .%f")[:-3]}.json"
+    filename = "generation-{}.json".format(datetime.now().strftime("%d-%m-%Y_%H-%M-%S .%f")[:-3])
 
     if not os.path.exists(path):
         os.mkdir(path)
@@ -29,35 +30,52 @@ def salvar_local(dados: list[dict]):
         json.dump([dict(d) for d in dados], f, indent=4)
     print("\t[😃] Sucesso!")
 
+def gerenciar_arquivo_root(diretorio:str):
+    if not os.path.exists(diretorio):
+        os.makedirs(diretorio)
+
+    if not os.path.exists(f'{diretorio}/AmazonRootCA1.pem'):
+        try:
+            root_ca1_url = "https://www.amazontrust.com/repository/AmazonRootCA1.pem"
+            response = requests.get(root_ca1_url)
+            response.raise_for_status()
+            with open('archives/AmazonRootCA1.pem','wb') as file:
+                file.write(response.content)
+                print('Arquivo ROOT CA1 da Amazon baixado com sucesso!')
+        except requests.exceptions.RequestException as e:
+            print(f'Ocorreu um erro na chamada:{e}')
+    else:
+        print(f'Arquivo ROOT CA1 da Amazon já existe no diretorio: {diretorio}')
+
 if __name__ == "__main__":
     print("GERADOR DE DADOS ALGAS")
-    print("Versão 3.0")
+    print("Versão 4.0")
     print()
     dotenv.load_dotenv()
 
-    send_to_azure = os.getenv("SENT_TO_AZURE", "0") == "1"
+    send_to_aws = os.getenv("SENT_TO_AWS", "0") == "1"
     record_logs = os.getenv("RECORD_LOGS", "0") == "1"
     gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
     package_length = int(os.getenv("PACKAGE_DATA_LENGTH", "0"))
 
-    azh = None
-    if send_to_azure:
-        print()
-        azh = AzureHelper()
-        print()
+    gerenciar_arquivo_root('archives')
 
-    # cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
+    aws = None
+    if send_to_aws:
+        aws = AwsHelper()
+        print('Instância preparada para envio de dados criada!')
+
+    #cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
     cenarios = [EnumCenarios.NORMAL]
     while True:
-
         print("\tGerando dados...")
         dados_simulados = []
         for c in cenarios:
             dados_simulados.extend(obter_dados_cenario(floor(package_length / len(cenarios)), c))
-
-        if azh is not None:
-            print("\n\tEnviando dados para Azure...")
-            azh.send_data(dados_simulados)
+        
+        if aws is not None:
+            print("\n\tEnviando dados para Iot Core...")
+            aws.send_data(dados_simulados)
 
         if record_logs:
             print("\n\tGravando dados para locamente...")
