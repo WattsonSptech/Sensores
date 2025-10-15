@@ -1,23 +1,14 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
-from math import floor
-from time import sleep
 import dotenv
-from tqdm import tqdm
+import pandas as pd
 import requests
+from time import sleep
+from tqdm import tqdm
 from aws_helper import AwsHelper
-from interfaces.EnumCenarios import EnumCenarios
-from sensores import Corrente, Frequencia, Harmonica, Potencia, Temperatura, Tensao
-
-def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
-    dados = []
-    sensores = [Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura]
-
-    for s in sensores:
-        dados.extend(s().gerar_dados(quantidade, cenario))
-
-    return dados
+from interfaces.EnumZonas import EnumZonas
+from sensores.Tensao import Tensao
 
 def salvar_local(dados: list[dict]):
     path = "./logs"
@@ -56,7 +47,6 @@ if __name__ == "__main__":
     send_to_aws = os.getenv("SENT_TO_AWS", "0") == "1"
     record_logs = os.getenv("RECORD_LOGS", "0") == "1"
     gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
-    package_length = int(os.getenv("PACKAGE_DATA_LENGTH", "0"))
 
     gerenciar_arquivo_root('archives')
 
@@ -65,22 +55,38 @@ if __name__ == "__main__":
         aws = AwsHelper()
         print('Instância preparada para envio de dados criada!')
 
-    #cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
-    cenarios = [EnumCenarios.NORMAL]
+    zonas = [ez.name for ez in EnumZonas]
+    tensao = Tensao()
+
+    fim = datetime.now()
+    inicio = fim - timedelta(days=14)
+    timestamps = pd.date_range(start=inicio, end=fim, freq='h')
+    horas = len(timestamps)
+
+    setup_inicial = {}
+    for z in zonas:
+        setup_inicial[z] = tensao.gerar_dados(horas)
+
+    inicio = datetime.now()
     while True:
         print("\tGerando dados...")
-        dados_simulados = []
-        for c in cenarios:
-            dados_simulados.extend(obter_dados_cenario(floor(package_length / len(cenarios)), c))
+        fim = inicio + timedelta(days=1)
+        timestamps = pd.date_range(start=inicio, end=fim, freq='h')
+        horas = len(timestamps)
+
+        dados_zonas = {}
+        for z in zonas:
+            dados_zonas[z] = tensao.gerar_dados(horas)
         
-        if aws is not None:
-            print("\n\tEnviando dados para Iot Core...")
-            aws.send_data(dados_simulados)
+        # if aws is not None:
+        #     print("\n\tEnviando dados para Iot Core...")
+        #     aws.send_data(dados_gerados)
+        #
+        # if record_logs:
+        #     print("\n\tGravando dados para locamente...")
+        #     salvar_local(dados_gerados)
 
-        if record_logs:
-            print("\n\tGravando dados para locamente...")
-            salvar_local(dados_simulados)
-
+        print(dados_zonas)
         print("\n")
         for _ in tqdm(range(0, gen_timeout), desc="\tSegundos para a próxima geração"):
             sleep(1)
