@@ -1,93 +1,60 @@
-from datetime import datetime, timedelta
-import json
 import os
+from datetime import datetime, timedelta
+
 import dotenv
-import pandas as pd
-import requests
 from time import sleep
 from tqdm import tqdm
-from aws_helper import AwsHelper
+from io_cursors.aws_helper import AwsHelper
 from interfaces.EnumZonas import EnumZonas
-from sensores.Tensao import Tensao
+from generators.GeradorTensao import GeradorTensao
+from io_cursors.LocalFiles import LocalFiles
 
-def salvar_local(dados: list[dict]):
-    path = "./logs"
-    filename = "generation-{}.json".format(datetime.now().strftime("%d-%m-%Y_%H-%M-%S .%f")[:-3])
+class OrquestradorDadosSensores:
 
-    if not os.path.exists(path):
-        os.mkdir(path)
+    gerador: GeradorTensao
+    gen_timeout: int
+    ts_atual: datetime
+    save_locally: bool
+    aws_helper: AwsHelper|None
 
-    with open(f"{path}/{filename}", 'w') as f:
-        json.dump([dict(d) for d in dados], f, indent=4)
-    print("\t[😃] Sucesso!")
+    def __init__(self):
+        dotenv.load_dotenv()
+        self.gerador = GeradorTensao([ez.name for ez in EnumZonas])
+        self.gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
+        self.ts_atual = datetime.now()
+        self.save_locally = os.getenv("RECORD_LOGS", "0") == "1"
 
-def gerenciar_arquivo_root(diretorio:str):
-    if not os.path.exists(diretorio):
-        os.makedirs(diretorio)
+        self.aws_helper = None
+        if os.getenv("SENT_TO_AWS", "0") == "1":
+            self.aws_helper = AwsHelper()
 
-    if not os.path.exists(f'{diretorio}/AmazonRootCA1.pem'):
-        try:
-            root_ca1_url = "https://www.amazontrust.com/repository/AmazonRootCA1.pem"
-            response = requests.get(root_ca1_url)
-            response.raise_for_status()
-            with open('archives/AmazonRootCA1.pem','wb') as file:
-                file.write(response.content)
-                print('Arquivo ROOT CA1 da Amazon baixado com sucesso!')
-        except requests.exceptions.RequestException as e:
-            print(f'Ocorreu um erro na chamada:{e}')
-    else:
-        print(f'Arquivo ROOT CA1 da Amazon já existe no diretorio: {diretorio}')
+    def setup_inicial(self):
+        dados_st_inicial = self.gerador.setup_inicial(14)
+        self.gravar_dados(dados_st_inicial)
+
+    def geracao_continua(self):
+        while True:
+            print("\n\tGerando dados...")
+            inicio = self.ts_atual
+            fim = inicio + timedelta(days=1)
+
+            dados = self.gerador.gerar_dados_zonas(inicio, fim)
+            self.ts_atual = fim
+
+            self.gravar_dados(dados)
+            for _ in tqdm(range(0, self.gen_timeout), desc="\tSegundos para a próxima geração"):
+                sleep(1)
+
+    def gravar_dados(self, dados: list[dict]):
+        if self.aws_helper is not None:
+            self.aws_helper.send_data(dados)
+
+        if self.save_locally:
+            LocalFiles.salvar_local(dados)
 
 if __name__ == "__main__":
     print("GERADOR DE DADOS ALGAS")
-    print("Versão 4.0")
-    print()
-    dotenv.load_dotenv()
-
-    send_to_aws = os.getenv("SENT_TO_AWS", "0") == "1"
-    record_logs = os.getenv("RECORD_LOGS", "0") == "1"
-    gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
-
-    gerenciar_arquivo_root('archives')
-
-    aws = None
-    if send_to_aws:
-        aws = AwsHelper()
-        print('Instância preparada para envio de dados criada!')
-
-    zonas = [ez.name for ez in EnumZonas]
-    tensao = Tensao()
-
-    fim = datetime.now()
-    inicio = fim - timedelta(days=14)
-    timestamps = pd.date_range(start=inicio, end=fim, freq='h')
-    horas = len(timestamps)
-
-    setup_inicial = {}
-    for z in zonas:
-        setup_inicial[z] = tensao.gerar_dados(horas)
-
-    inicio = datetime.now()
-    while True:
-        print("\tGerando dados...")
-        fim = inicio + timedelta(days=1)
-        timestamps = pd.date_range(start=inicio, end=fim, freq='h')
-        horas = len(timestamps)
-
-        dados_zonas = {}
-        for z in zonas:
-            dados_zonas[z] = tensao.gerar_dados(horas)
-        
-        # if aws is not None:
-        #     print("\n\tEnviando dados para Iot Core...")
-        #     aws.send_data(dados_gerados)
-        #
-        # if record_logs:
-        #     print("\n\tGravando dados para locamente...")
-        #     salvar_local(dados_gerados)
-
-        print(dados_zonas)
-        print("\n")
-        for _ in tqdm(range(0, gen_timeout), desc="\tSegundos para a próxima geração"):
-            sleep(1)
-        print("\n")
+    print("Versão 4.0\n")
+    orq = OrquestradorDadosSensores()
+    orq.setup_inicial()
+    orq.geracao_continua()
