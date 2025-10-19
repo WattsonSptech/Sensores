@@ -56,5 +56,5 @@ class GeradorTensao:
     def _encapsular_dados(self, vals_numericos: np.ndarray, timestamps: DatetimeIndex, zona: str) -> list[dict]:
         dados_encapsul = []
         for val, ts in zip(vals_numericos, timestamps):
-            dados_encapsul.append({'timestamp': ts, 'valor': val, 'zona': zona})
+            dados_encapsul.append({'timestamp': str(ts), 'valor': val, 'zona': zona})
         return dados_encapsul

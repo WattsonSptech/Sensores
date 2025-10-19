@@ -22,7 +22,7 @@ class OrquestradorDadosSensores:
         self.gerador = GeradorTensao([ez.name for ez in EnumZonas])
         self.gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
         self.ts_atual = datetime.now()
-        self.save_locally = os.getenv("RECORD_LOGS", "0") == "1"
+        self.save_locally = os.getenv("SAVE_LOCALLY", "0") == "1"
 
         self.aws_helper = None
         if os.getenv("SENT_TO_AWS", "0") == "1":
