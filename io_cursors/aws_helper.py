@@ -1,14 +1,14 @@
-import awscrt.mqtt
 from awsiot import mqtt_connection_builder
-from awscrt import mqtt
+from awscrt import mqtt,exceptions
 import os
 import traceback
 import json
 import requests
+import time
 
 class AwsHelper:
 
-    device = awscrt.mqtt.Connection
+    mqtt_connection = None
     topic = None
     base_path = "./io_cursors/aws_config_files"
     ROOT_CA1_URL = "https://www.amazontrust.com/repository/AmazonRootCA1.pem"
@@ -16,9 +16,9 @@ class AwsHelper:
     def __init__(self):
         self.topic = os.getenv('TOPIC')
         self.base_path = os.path.abspath(self.base_path)
-
+        self.connected = False
         self._baixar_arquivo_root()
-        self.device = self._criar_device()
+        self._criar_device()
 
     def _baixar_arquivo_root(self):
         if not os.path.exists(self.base_path):
@@ -35,7 +35,11 @@ class AwsHelper:
             except requests.exceptions.RequestException as e:
                 print(f'\tOcorreu um erro na chamada:{e}')
 
-    def _criar_device(self) -> awscrt.mqtt.Connection:
+    def _criar_device(self):
+        if self.connected:
+            print('Já está conectado!')
+            return
+        
         ca_filepath = os.path.abspath(f"{self.base_path}/AmazonRootCA1.pem")
 
         iot_config_files_path = os.getenv('IOT_CONFIG_FILES_PATH', None)
@@ -50,19 +54,30 @@ class AwsHelper:
         if not os.path.exists(cert_filepath) or not os.path.exists(pri_key_filepath):
             raise FileNotFoundError(f"Ou o iot-certificate ou a iot-private-key não existem em \"{cert_filepath}\".")
 
-        device = mqtt_connection_builder.mtls_from_path(
+        self.mqtt_connection = mqtt_connection_builder.mtls_from_path(
             cert_filepath=cert_filepath, pri_key_filepath=pri_key_filepath, ca_filepath=ca_filepath,
             endpoint=os.getenv("ENDPOINT"), client_id=os.getenv("CLIENT_ID"), keep_alive_secs = 30
         )
-        device.connect().result()
-        print("Conexão bem estabelecida!")
-        return device
+        try:
+            connect_future = self.mqtt_connection.connect()
+            connect_future.result(timeout=10)
+            time.sleep(1)
+            self.connected = True
+            print("Conexão bem estabelecida!")
+        except exceptions.AwsCrtError as e:
+            print(f"Conexão falhou: {e}")
+            traceback.print_exc()
         
     def send_data(self, dados: list[dict]):
+        if not self.connected:
+            print('Conexão perdida, reconectando...')
+            self._criar_device()
         print("\n\tEnviando dados para Iot Core...")
+        payload = json.dumps(dados)
         try:
-            self.device.publish(topic=self.topic,payload= json.dumps(dados),qos=mqtt.QoS.AT_LEAST_ONCE)
+            self.mqtt_connection.publish(topic=self.topic,payload=payload,qos=mqtt.QoS.AT_LEAST_ONCE)
             print(f'Publicado no topico {self.topic}')
         except Exception as e:
             print(f"\n[!] Falha ao enviar dados: {e}")
             traceback.print_exc()
+

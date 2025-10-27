@@ -8,6 +8,8 @@ from io_cursors.aws_helper import AwsHelper
 from interfaces.EnumZonas import EnumZonas
 from generators.GeradorTensao import GeradorTensao
 from io_cursors.LocalFiles import LocalFiles
+import json
+import traceback
 
 class OrquestradorDadosSensores:
 
@@ -39,9 +41,15 @@ class OrquestradorDadosSensores:
             fim = inicio + timedelta(days=1)
 
             dados = self.gerador.gerar_dados_zonas(inicio, fim)
-            self.ts_atual = fim
-
-            self.gravar_dados(dados)
+           
+            dados_particao = self.reduzir_tamanho_arquivo(dados)
+            try:
+                for particao in tqdm(dados_particao, desc="\tParticoes geradas", unit="particao"):
+                    self.gravar_dados(json.loads(particao))
+            except Exception as e:
+                print(f"\n[!] Falha ao enviar dados: {e}")
+                traceback.print_exc()
+                
             for _ in tqdm(range(0, self.gen_timeout), desc="\tSegundos para a próxima geração"):
                 sleep(1)
 
@@ -51,6 +59,29 @@ class OrquestradorDadosSensores:
 
         if self.save_locally:
             LocalFiles.salvar_local(dados)
+
+    def reduzir_tamanho_arquivo(self,dados: list[dict]):
+        blocos = []
+        bloco_atual = []
+        tamanho_atual = 0
+
+        for d in dados:
+            item_str = json.dumps(d, ensure_ascii=False)
+            item_size_kb = len(item_str.encode('utf-8')) / 1024
+
+            if tamanho_atual + item_size_kb > 128 and bloco_atual:
+                blocos.append(json.dumps(bloco_atual, ensure_ascii=False))
+                bloco_atual = []
+                tamanho_atual = 0
+
+            bloco_atual.append(d)
+            tamanho_atual += item_size_kb
+
+        if bloco_atual:
+            blocos.append(json.dumps(bloco_atual, ensure_ascii=False))
+
+        return blocos
+
 
 if __name__ == "__main__":
     print("GERADOR DE DADOS ALGAS")
