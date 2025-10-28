@@ -2,3 +2,4 @@
 *.pyc
 .idea/*
 .env
+io_cursors/aws_config_files

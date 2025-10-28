@@ -1,87 +1,83 @@
-from datetime import datetime
-import json
 import os
-from math import floor
-from time import sleep
+from datetime import datetime, timedelta
+from math import ceil
+
 import dotenv
+from time import sleep
 from tqdm import tqdm
-import requests
-from aws_helper import AwsHelper
-from interfaces.EnumCenarios import EnumCenarios
-from sensores import Corrente, Frequencia, Harmonica, Potencia, Temperatura, Tensao
+from io_cursors.aws_helper import AwsHelper
+from interfaces.EnumZonas import EnumZonas
+from generators.GeradorTensao import GeradorTensao
+from io_cursors.LocalFiles import LocalFiles
+import json
+import traceback
 
-def obter_dados_cenario(quantidade: int, cenario: EnumCenarios):
-    dados = []
-    sensores = [Corrente, Frequencia, Harmonica, Potencia, Tensao, Temperatura]
+class OrquestradorDadosSensores:
 
-    for s in sensores:
-        dados.extend(s().gerar_dados(quantidade, cenario))
+    gerador: GeradorTensao
+    gen_timeout: int
+    ts_atual: datetime
+    save_locally: bool
+    aws_helper: AwsHelper|None
 
-    return dados
+    def __init__(self):
+        dotenv.load_dotenv()
+        self.gerador = GeradorTensao([ez.name for ez in EnumZonas])
+        self.gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
+        self.ts_atual = datetime.now()
+        self.save_locally = os.getenv("SAVE_LOCALLY", "0") == "1"
 
-def salvar_local(dados: list[dict]):
-    path = "./logs"
-    filename = "generation-{}.json".format(datetime.now().strftime("%d-%m-%Y_%H-%M-%S .%f")[:-3])
+        self.aws_helper = None
+        if os.getenv("SENT_TO_AWS", "0") == "1":
+            self.aws_helper = AwsHelper()
 
-    if not os.path.exists(path):
-        os.mkdir(path)
+    def setup_inicial(self):
+        dados_st_inicial = self.gerador.setup_inicial(14)
+        [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados_st_inicial)]
 
-    with open(f"{path}/{filename}", 'w') as f:
-        json.dump([dict(d) for d in dados], f, indent=4)
-    print("\t[😃] Sucesso!")
+    def geracao_continua(self):
+        while True:
+            print("\n\tGerando dados...")
+            inicio = self.ts_atual
+            fim = inicio + timedelta(days=1)
 
-def gerenciar_arquivo_root(diretorio:str):
-    if not os.path.exists(diretorio):
-        os.makedirs(diretorio)
+            dados = self.gerador.gerar_dados_zonas(inicio, fim)
+            [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados)]
 
-    if not os.path.exists(f'{diretorio}/AmazonRootCA1.pem'):
-        try:
-            root_ca1_url = "https://www.amazontrust.com/repository/AmazonRootCA1.pem"
-            response = requests.get(root_ca1_url)
-            response.raise_for_status()
-            with open('archives/AmazonRootCA1.pem','wb') as file:
-                file.write(response.content)
-                print('Arquivo ROOT CA1 da Amazon baixado com sucesso!')
-        except requests.exceptions.RequestException as e:
-            print(f'Ocorreu um erro na chamada:{e}')
-    else:
-        print(f'Arquivo ROOT CA1 da Amazon já existe no diretorio: {diretorio}')
+            for _ in tqdm(range(0, self.gen_timeout), desc="\tSegundos para a próxima geração"):
+                sleep(1)
+
+    def gravar_dados(self, dados: list[dict]):
+        if self.aws_helper is not None:
+            self.aws_helper.send_data(dados)
+
+        if self.save_locally:
+            LocalFiles.salvar_local(dados)
+
+    def reduzir_tamanho_arquivo(self, dados: list[dict]):
+        blocos = []
+        bloco_atual = []
+        tamanho_atual = 0
+
+        for d in dados:
+            item_size_kb = ceil(len(json.dumps(d, ensure_ascii=False).encode('utf-8')) / 1024)
+
+            if tamanho_atual + item_size_kb > 128 and bloco_atual:
+                blocos.append(bloco_atual)
+                bloco_atual = []
+                tamanho_atual = 0
+
+            bloco_atual.append(d)
+            tamanho_atual += item_size_kb
+
+        if bloco_atual:
+            blocos.append(bloco_atual)
+        return blocos
+
 
 if __name__ == "__main__":
     print("GERADOR DE DADOS ALGAS")
-    print("Versão 4.0")
-    print()
-    dotenv.load_dotenv()
-
-    send_to_aws = os.getenv("SENT_TO_AWS", "0") == "1"
-    record_logs = os.getenv("RECORD_LOGS", "0") == "1"
-    gen_timeout = int(os.getenv("GENERATION_TIMEOUT"))
-    package_length = int(os.getenv("PACKAGE_DATA_LENGTH", "0"))
-
-    gerenciar_arquivo_root('archives')
-
-    aws = None
-    if send_to_aws:
-        aws = AwsHelper()
-        print('Instância preparada para envio de dados criada!')
-
-    #cenarios = [EnumCenarios.TERRIVEL, EnumCenarios.NORMAL, EnumCenarios.EXCEPCIONAL]
-    cenarios = [EnumCenarios.NORMAL]
-    while True:
-        print("\tGerando dados...")
-        dados_simulados = []
-        for c in cenarios:
-            dados_simulados.extend(obter_dados_cenario(floor(package_length / len(cenarios)), c))
-        
-        if aws is not None:
-            print("\n\tEnviando dados para Iot Core...")
-            aws.send_data(dados_simulados)
-
-        if record_logs:
-            print("\n\tGravando dados para locamente...")
-            salvar_local(dados_simulados)
-
-        print("\n")
-        for _ in tqdm(range(0, gen_timeout), desc="\tSegundos para a próxima geração"):
-            sleep(1)
-        print("\n")
+    print("Versão 4.0\n")
+    orq = OrquestradorDadosSensores()
+    orq.setup_inicial()
+    orq.geracao_continua()
