@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from math import ceil
 
 import dotenv
 from time import sleep
@@ -32,7 +33,7 @@ class OrquestradorDadosSensores:
 
     def setup_inicial(self):
         dados_st_inicial = self.gerador.setup_inicial(14)
-        self.gravar_dados(dados_st_inicial)
+        [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados_st_inicial)]
 
     def geracao_continua(self):
         while True:
@@ -53,13 +54,13 @@ class OrquestradorDadosSensores:
         if self.save_locally:
             LocalFiles.salvar_local(dados)
 
-    def reduzir_tamanho_arquivo(self,dados: list[dict]):
+    def reduzir_tamanho_arquivo(self, dados: list[dict]):
         blocos = []
         bloco_atual = []
         tamanho_atual = 0
 
         for d in dados:
-            item_size_kb = len(json.dumps(d, ensure_ascii=False).encode('utf-8')) / 1024
+            item_size_kb = ceil(len(json.dumps(d, ensure_ascii=False).encode('utf-8')) / 1024)
 
             if tamanho_atual + item_size_kb > 128 and bloco_atual:
                 blocos.append(bloco_atual)
