@@ -41,15 +41,8 @@ class OrquestradorDadosSensores:
             fim = inicio + timedelta(days=1)
 
             dados = self.gerador.gerar_dados_zonas(inicio, fim)
-           
-            dados_particao = self.reduzir_tamanho_arquivo(dados)
-            try:
-                for particao in tqdm(dados_particao, desc="\tParticoes geradas", unit="particao"):
-                    self.gravar_dados(json.loads(particao))
-            except Exception as e:
-                print(f"\n[!] Falha ao enviar dados: {e}")
-                traceback.print_exc()
-                
+            [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados)]
+
             for _ in tqdm(range(0, self.gen_timeout), desc="\tSegundos para a próxima geração"):
                 sleep(1)
 
@@ -66,11 +59,10 @@ class OrquestradorDadosSensores:
         tamanho_atual = 0
 
         for d in dados:
-            item_str = json.dumps(d, ensure_ascii=False)
-            item_size_kb = len(item_str.encode('utf-8')) / 1024
+            item_size_kb = len(json.dumps(d, ensure_ascii=False).encode('utf-8')) / 1024
 
             if tamanho_atual + item_size_kb > 128 and bloco_atual:
-                blocos.append(json.dumps(bloco_atual, ensure_ascii=False))
+                blocos.append(bloco_atual)
                 bloco_atual = []
                 tamanho_atual = 0
 
@@ -78,8 +70,7 @@ class OrquestradorDadosSensores:
             tamanho_atual += item_size_kb
 
         if bloco_atual:
-            blocos.append(json.dumps(bloco_atual, ensure_ascii=False))
-
+            blocos.append(bloco_atual)
         return blocos
 
 
