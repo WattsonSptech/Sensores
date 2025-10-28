@@ -1,3 +1,4 @@
+import sys
 from awsiot import mqtt_connection_builder
 from awscrt import mqtt,exceptions
 import os
@@ -58,15 +59,11 @@ class AwsHelper:
             cert_filepath=cert_filepath, pri_key_filepath=pri_key_filepath, ca_filepath=ca_filepath,
             endpoint=os.getenv("ENDPOINT"), client_id=os.getenv("CLIENT_ID"), keep_alive_secs = 30
         )
-        try:
-            connect_future = self.mqtt_connection.connect()
-            connect_future.result(timeout=10)
-            time.sleep(1)
-            self.connected = True
-            print("Conexão bem estabelecida!")
-        except exceptions.AwsCrtError as e:
-            print(f"Conexão falhou: {e}")
-            traceback.print_exc()
+        connect_future = self.mqtt_connection.connect()
+        connect_future.result(timeout=10)
+        time.sleep(1)
+        self.connected = True
+        print("Conexão bem estabelecida!")
         
     def send_data(self, dados: list[dict]):
         if not self.connected:
@@ -75,9 +72,11 @@ class AwsHelper:
         print("\n\tEnviando dados para Iot Core...")
         payload = json.dumps(dados)
         try:
-            self.mqtt_connection.publish(topic=self.topic,payload=payload,qos=mqtt.QoS.AT_LEAST_ONCE)
+            publish_promise = self.mqtt_connection.publish(topic=self.topic,payload=payload,qos=mqtt.QoS.AT_LEAST_ONCE)[0]
+            publish_promise.result(timeout=5)
             print(f'Publicado no topico {self.topic}')
-        except Exception as e:
-            print(f"\n[!] Falha ao enviar dados: {e}")
+        except TimeoutError as e:
+            print(f"\n[!] Falha ao enviar dados!")
             traceback.print_exc()
+            sys.exit(1)
 
