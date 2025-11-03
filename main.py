@@ -45,7 +45,7 @@ class OrquestradorDadosSensores:
             [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados)]
 
             for _ in tqdm(range(0, self.gen_timeout), desc="\tSegundos para a próxima geração"):
-                sleep(1)
+                sleep(300)
 
     def gravar_dados(self, dados: list[dict]):
         if self.aws_helper is not None:
