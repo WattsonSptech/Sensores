@@ -32,8 +32,9 @@ class OrquestradorDadosSensores:
             self.aws_helper = AwsHelper()
 
     def setup_inicial(self):
-        dados_st_inicial = self.gerador.setup_inicial(14)
-        [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados_st_inicial)]
+        print("deactivated")
+        # dados_st_inicial = self.gerador.setup_inicial(14)
+        # [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados_st_inicial)]
 
     def geracao_continua(self):
         while True:
@@ -45,7 +46,7 @@ class OrquestradorDadosSensores:
             [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados)]
 
             for _ in tqdm(range(0, self.gen_timeout), desc="\tSegundos para a próxima geração"):
-                sleep(300)
+                sleep(1)
 
     def gravar_dados(self, dados: list[dict]):
         if self.aws_helper is not None:
