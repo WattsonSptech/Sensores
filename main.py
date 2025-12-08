@@ -1,16 +1,14 @@
 import os
-from datetime import datetime, timedelta
-from math import ceil
-
-import dotenv
-from time import sleep
-from tqdm import tqdm
-from io_cursors.aws_helper import AwsHelper
-from interfaces.EnumZonas import EnumZonas
-from generators.GeradorTensao import GeradorTensao
-from io_cursors.LocalFiles import LocalFiles
 import json
-import traceback
+import dotenv
+from math import ceil
+from tqdm import tqdm
+from time import sleep
+from datetime import datetime, timedelta
+from interfaces.EnumZonas import EnumZonas
+from io_cursors.aws_helper import AwsHelper
+from io_cursors.LocalFiles import LocalFiles
+from generators.GeradorTensao import GeradorTensao
 
 class OrquestradorDadosSensores:
 
@@ -31,10 +29,6 @@ class OrquestradorDadosSensores:
         if os.getenv("SENT_TO_AWS", "0") == "1":
             self.aws_helper = AwsHelper()
 
-    def setup_inicial(self):
-        print("deactivated")
-        # dados_st_inicial = self.gerador.setup_inicial(14)
-        # [self.gravar_dados(p) for p in self.reduzir_tamanho_arquivo(dados_st_inicial)]
 
     def geracao_continua(self):
         while True:
@@ -78,7 +72,6 @@ class OrquestradorDadosSensores:
 
 if __name__ == "__main__":
     print("GERADOR DE DADOS ALGAS")
-    print("Versão 4.0\n")
+    print("Versão 5.0\n")
     orq = OrquestradorDadosSensores()
-    orq.setup_inicial()
     orq.geracao_continua()
